@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/SamRoyEffer/tinyapp/issues"
   },
-  "homepage": "https://github.com/SamRoyEffer/tinyapp#readme"
+  "homepage": "https://github.com/SamRoyEffer/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
