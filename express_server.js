@@ -12,6 +12,18 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new"); // adding new urls
+});
+app.get("/urls/:shortURL", (req, res) => {
+  const templateVars = {
+    //template
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+  };
+  console.log(urlDatabase);
+  res.render("url_show", templateVars);
+});
 app.get("/", (req, res) => {
   res.redirect("/urls"); // initial homepage
 });
@@ -23,35 +35,30 @@ app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("url_index", templateVars); // list of saved urls
 });
-app.post("/urls", (req, res) => {
-  console.log(JSON.stringify(req.body));
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`/urls/${shortURL}`);
-});
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const fetchedURL = urlDatabase[shortURL];
   console.log(fetchedURL);
   res.redirect(fetchedURL);
 });
+app.post("/urls", (req, res) => {
+  console.log(JSON.stringify(req.body));
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`);
+});
 app.post("/urls/:shortURL/delete", (req, res) => {
   const { shortURL } = req.params;
+  console.log(shortURL);
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
+app.post("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`);
+});
 
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new"); // adding new urls
-});
-app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = {
-    //template
-    shortURL: req.params.shortURL,
-    longURL: req.params.longURL,
-  };
-  res.render("url_show", templateVars);
-});
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
