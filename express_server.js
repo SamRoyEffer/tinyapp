@@ -42,21 +42,19 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(fetchedURL);
 });
 app.post("/urls", (req, res) => {
-  console.log(JSON.stringify(req.body));
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`/urls/${shortURL}`);
+  res.redirect("/urls");
 });
 app.post("/urls/:shortURL/delete", (req, res) => {
   const { shortURL } = req.params;
-  console.log(shortURL);
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
 app.post("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`/urls/${shortURL}`);
+  res.redirect("/urls");
 });
 
 app.listen(PORT, () => {
