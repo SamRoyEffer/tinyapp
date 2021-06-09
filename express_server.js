@@ -5,8 +5,32 @@ const PORT = 8080;
 app.use(express.urlencoded({ extented: true }));
 app.set("view engine", "ejs");
 app.use(cookieParser());
-
 const generateRandomString = () => Math.random().toString(36).substr(2, 8);
+
+
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+  "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+const getUserByEmail = (email) => {
+  const keys = Object.keys(users)
+  for (let key of keys) {
+    const user = users[key]
+    if(user.email === email) {
+      return user;
+    }
+  }
+  return null;
+}
+
 const urlDatabase = {
   // memory of url codes
   b2xVn2: "http://www.lighthouselabs.ca",
@@ -36,6 +60,7 @@ app.get("/urls/:shortURL", (req, res) => {
   
   res.render("url_show", templateVars);
 });
+
 app.get('/logout', function(req, res) {
   res.clearCookie("username")
   res.redirect("/")
@@ -49,8 +74,10 @@ app.get("/", (req, res) => {
 
 // show list of urls
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase, 
-    username: req.cookies["username"] };
+  const templateVars = { 
+  urls: urlDatabase, 
+  username: users[req.cookies["username"]],
+};
   res.render("url_index", templateVars); // list of saved urls
 });
 
@@ -70,10 +97,41 @@ app.get("/login", (req, res) => {
   res.redirect("/urls");
 });
 
+// getting registration screen
+app.get("/register",(req, res) =>{
+  const templateVars = {username: req.cookies["username"]};
+  res.render("register", templateVars)
+});
+
+
+app.post("/register", (req, res) =>{
+  const email = req.body.email;
+  const password = req.body.password
+
+  if (getUserByEmail(email)) {
+    return res.status(401).send("Wrong User name or Password");
+  };
+  const id = generateRandomString();
+  const user = {id, email, password}
+  users[id] = user;
+  res.cookie("username", id)
+  console.log("user", user)
+  console.log("users", users)
+  
+  res.redirect('/urls')
+})
+
 // checks the user when logged in send to the home page
 app.post("/login", (req, res) => {
-  let username = req.body.username;
-  res.cookie("username", username);
+  const email = req.body.email;
+  const password = req.body.password
+
+  const user = getUserByEmail(email)
+
+  if (!user || user.password !== password) {
+    return res.status(403).send("Wrong User or Password!")
+  }
+  res.cookie("email", email);
   res.redirect("/urls");
 });
 
