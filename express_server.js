@@ -36,7 +36,6 @@ app.get("/urls/:shortURL", (req, res) => {
   
   res.render("url_show", templateVars);
 });
-
 app.get('/logout', function(req, res) {
   res.clearCookie("username")
   res.redirect("/")
