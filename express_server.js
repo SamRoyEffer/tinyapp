@@ -39,7 +39,6 @@ const urlDatabase = {
 
 //creating a new url
 app.get("/urls/new", (req, res) => {
-  console.log('added a new url')
   const templateVars = {
     user: req.cookies["user_id"],
   
@@ -55,7 +54,6 @@ app.get("/urls/:shortURL", (req, res) => {
     user: req.cookies["user_id"],
     
   };
-  console.log(urlDatabase);
   
   res.render("url_show", templateVars);
 });
@@ -79,7 +77,7 @@ app.get("/urls", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const fetchedURL = urlDatabase[shortURL];
-  console.log(fetchedURL);
+  
   res.redirect(fetchedURL);
 });
 
@@ -97,7 +95,6 @@ app.post("/login", (req, res) => {
   const password = req.body.password
 
   const user = getUserByEmail(email)
-  console.log(user)
   if (!user || user.password !== password) {
     return res.status(400).send("Wrong User or Password!")
   }
