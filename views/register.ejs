@@ -16,14 +16,18 @@
     <header>
       <%- include('partials/_header') %>
     </header>
+    <h4>Create Account</h4>
     <div class="card text-center">
       <div class="card-header"></div>
       <div class="card-body">
         <form action="/register" method="POST">
-          <label for="email">Email</label>
+          <div><label for="email">Email</label>
           <input id="email" name="email" data-lpignore="true">
+          </div>
+          <div>
           <label for="password">Password</label>
           <input id="password" name="password" type="password" data-lpignore="true">
+          </div>
           <button type="submit">Create Account</button>
           </form>
     <!-- Bootstrap JS -->

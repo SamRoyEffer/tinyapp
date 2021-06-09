@@ -41,7 +41,7 @@ const urlDatabase = {
 app.get("/urls/new", (req, res) => {
   console.log('added a new url')
   const templateVars = {
-    username: req.cookies["username"],
+    user: req.cookies["user_id"],
   
   }
   res.render("urls_new", templateVars); 
@@ -52,7 +52,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
-    username: req.cookies["username"],
+    user: req.cookies["user_id"],
     
   };
   console.log(urlDatabase);
@@ -70,7 +70,7 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = { 
   urls: urlDatabase, 
-  username: users[req.cookies["username"]],
+  user: users[req.cookies["user_id"]],
 };
   res.render("url_index", templateVars); // list of saved urls
 });
@@ -86,7 +86,7 @@ app.get("/u/:shortURL", (req, res) => {
 //get the login infor and check to see if it exists
 app.get("/login", (req, res) => {
   const templateVars = {
-    username: null
+    user: null
   }
   res.render('login_page', templateVars)
 });
@@ -97,23 +97,23 @@ app.post("/login", (req, res) => {
   const password = req.body.password
 
   const user = getUserByEmail(email)
-
+  console.log(user)
   if (!user || user.password !== password) {
     return res.status(400).send("Wrong User or Password!")
   }
-  res.cookie("username", user.id);
+  res.cookie("user_id", user.id);
   res.redirect("/urls");
 });
 
 
 app.get('/logout', function(req, res) {
-  res.clearCookie("username")
+  res.clearCookie("user_id")
   res.redirect("/")
 })
 
 // getting registration screen
 app.get("/register",(req, res) =>{
-  const templateVars = {username: req.cookies["username"]};
+  const templateVars = {user: req.cookies["user_id"]};
   res.render("register", templateVars)
 });
 
@@ -128,7 +128,8 @@ app.post("/register", (req, res) =>{
   const id = generateRandomString();
   const user = {id, email, password}
   users[id] = user;
-  res.cookie("username", id)
+  res.cookie('user_id', id)
+  
   res.redirect('/urls')
 })
 
