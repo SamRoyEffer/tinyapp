@@ -49,7 +49,6 @@ app.get("/urls/new", (req, res) => {
 
 // adding a long url to make shor url 
 app.get("/urls/:shortURL", (req, res) => {
-  console.log('')
   const templateVars = {
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
@@ -60,11 +59,6 @@ app.get("/urls/:shortURL", (req, res) => {
   
   res.render("url_show", templateVars);
 });
-
-app.get('/logout', function(req, res) {
-  res.clearCookie("username")
-  res.redirect("/")
-})
 
 // redirects to urls page
 app.get("/", (req, res) => {
@@ -91,11 +85,31 @@ app.get("/u/:shortURL", (req, res) => {
 
 //get the login infor and check to see if it exists
 app.get("/login", (req, res) => {
-  let templateVars = {
-    username: req.cookies["username"],
-  };
+  const templateVars = {
+    username: null
+  }
+  res.render('login_page', templateVars)
+});
+
+// checks the user when logged in send to the home page
+app.post("/login", (req, res) => {
+  const email = req.body.email;
+  const password = req.body.password
+
+  const user = getUserByEmail(email)
+
+  if (!user || user.password !== password) {
+    return res.status(400).send("Wrong User or Password!")
+  }
+  res.cookie("username", user.id);
   res.redirect("/urls");
 });
+
+
+app.get('/logout', function(req, res) {
+  res.clearCookie("username")
+  res.redirect("/")
+})
 
 // getting registration screen
 app.get("/register",(req, res) =>{
@@ -109,35 +123,17 @@ app.post("/register", (req, res) =>{
   const password = req.body.password
 
   if (getUserByEmail(email)) {
-    return res.status(401).send("Wrong User name or Password");
+    return res.status(400).send("Wrong User name or Password");
   };
   const id = generateRandomString();
   const user = {id, email, password}
   users[id] = user;
   res.cookie("username", id)
-  console.log("user", user)
-  console.log("users", users)
-  
   res.redirect('/urls')
 })
 
-// checks the user when logged in send to the home page
-app.post("/login", (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password
-
-  const user = getUserByEmail(email)
-
-  if (!user || user.password !== password) {
-    return res.status(403).send("Wrong User or Password!")
-  }
-  res.cookie("email", email);
-  res.redirect("/urls");
-});
-
 // shows the new short url code for the longurl
 app.post("/urls", (req, res) => {
-  console.log("Showing url page",JSON.stringify(req.body));
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect('/urls');
@@ -146,7 +142,6 @@ app.post("/urls", (req, res) => {
 //removes a short and long url
 app.post("/urls/:shortURL/delete", (req, res) => {
   const { shortURL } = req.params;
-  console.log(shortURL);
   delete urlDatabase[shortURL];
   res.redirect("/urls");
 });
