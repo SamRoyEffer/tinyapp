@@ -23,15 +23,13 @@
   
   <%if (user) {%>
     <p>Logged in as: <%= user.email %></p>
-    <form action="logout">
+    <form action="/logout" method="POST">
      <button type="submit" class="btn btn-success">Logout</button>
     </form>
     <% } else { %>
   <form method="GET" action="/login">
     <button type="submit" class="btn btn-success">Login</button>
    </form> 
-
-
    <form method="GET" action="/register">
     <button type="submit" class="btn btn-success">Create Account</button>
   </form>
