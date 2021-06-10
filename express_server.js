@@ -2,6 +2,9 @@ const cookieParser = require("cookie-parser");
 const express = require("express");
 const app = express();
 const PORT = 8080;
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+
 app.use(express.urlencoded({ extented: true }));
 app.set("view engine", "ejs");
 app.use(cookieParser());
@@ -39,7 +42,7 @@ const getUserByEmail = (email) => {
 
 const urlsForUser = (id, database) => {
   const urls = {}
-  //if(userID === id){ push the urls to the object and return}
+ 
     for(let shortUrls in database ){
     if (database[shortUrls].userID === id) {
       urls[shortUrls] = {longURL : database[shortUrls].longURL, userID : id}
@@ -48,6 +51,25 @@ const urlsForUser = (id, database) => {
   return urls
 }
 
+const newUser = (email, password) => {
+  const id = generateRandomString();
+  const newUserO= {
+    id, 
+    email, 
+    password : bcrypt.hashSync(password, saltRounds),
+  }
+  users[id] = newUserO;
+
+  return id;
+}
+
+const authentication = (email, password) => {
+  const user = getUserByEmail(email);
+  if (user && bcrypt.compareSync(password, user.password)) {
+    return user;
+  }
+  return false
+}
 
 //CREATE
 //creating a new url
@@ -154,13 +176,13 @@ app.get("/login", (req, res) => {
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password
-
-  const user = getUserByEmail(email)
-  if (!user || user.password !== password) {
-    return res.status(400).send("Wrong User or Password!")
+  const user = authentication(email, password)
+  if (user) {
+    res.cookie('user_id', user.id)
+    res.redirect('/urls')
+  } else {
+    res.status(401).send('Please Try Again.')
   }
-  res.cookie("user_id", user.id);
-  res.redirect("/urls");
 });
 
 
@@ -178,18 +200,17 @@ app.get("/register",(req, res) =>{
 
 app.post("/register", (req, res) =>{
   const email = req.body.email;
-  const password = req.body.password
-
-  if (getUserByEmail(email)) {
-    return res.status(400).send("Wrong User name or Password");
-  };
-  const id = generateRandomString();
-  users[id] = {id, email, password}
-  res.cookie('user_id', id)
+  const password = req.body.password;
   
+  const user = (getUserByEmail(email)) 
+
+  if (user) {
+    return res.status(400).send("Wrong User name or Password");
+  }
+  const newID = newUser(email, password);
+  res.cookie('user_id', newID)
   res.redirect('/urls')
 })
-
 
 
 
