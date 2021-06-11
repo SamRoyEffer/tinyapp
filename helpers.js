@@ -23,7 +23,7 @@ const urlsForUser = (id, database) => {
   return urls;
 };
 
-const newUser = (email, password, database) => {
+const createNewUsers = (email, password, database) => {
   const id = generateRandomString();
   const newUserO = {
     id,
@@ -35,7 +35,7 @@ const newUser = (email, password, database) => {
   return id;
 };
 
-const authentication = (email, password, database) => {
+const authenticationOfUsers = (email, password, database) => {
   const user = getUserByEmail(email, database);
   if (user && bcrypt.compareSync(password, user.password)) {
     return user;
@@ -45,8 +45,8 @@ const authentication = (email, password, database) => {
 const generateRandomString = () => Math.random().toString(36).substr(2, 8);
 
 module.exports = {
-  authentication,
-  newUser,
+  authenticationOfUsers,
+  createNewUsers,
   urlsForUser,
   getUserByEmail,
   generateRandomString,

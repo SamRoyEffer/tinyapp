@@ -12,8 +12,8 @@ app.use(
 );
 
 const {
-  authentication,
-  newUser,
+  authenticationOfUsers,
+  createNewUsers,
   urlsForUser,
   getUserByEmail,
   generateRandomString,
@@ -36,7 +36,7 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" },
 };
 
-//helper functions
+
 
 //CREATE
 //creating a new url
@@ -49,13 +49,19 @@ app.get("/urls/new", (req, res) => {
 
 // adding a long url to make shor url
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL,
-    user: users[req.session["user_id"]],
-  };
-
-  res.render("url_show", templateVars);
+  const shortURL = req.params.shortURL
+  const userCookie = req.session["user_id"]
+  const shortLink = urlDatabase[shortURL]
+  const userCode = shortLink.userID
+  if (userCookie === userCode) {
+    const templateVars = {
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL].longURL,
+      user: users[req.session["user_id"]],
+    };
+    return res.render("url_show", templateVars);
+  }
+  res.status(400).send("Please sign in!")
 });
 
 //READ
@@ -68,6 +74,17 @@ app.get("/", (req, res) => {
   };
   res.render("main-page", templateVars);
 });
+
+//take to website url
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL
+  let longURL = urlDatabase[shortURL].longURL
+  if (!longURL.includes("http://")) {
+    longURL = "http://" + longURL
+  
+  }
+  res.redirect(longURL);
+})
 
 // show list of urls
 app.get("/urls", (req, res) => {
@@ -100,9 +117,12 @@ app.post("/urls", (req, res) => {
 
 //edits the long url associated with the short url
 app.post("/urls/:shortURL", (req, res) => {
+
+  
   const shortURL = req.params.shortURL;
   urlDatabase[shortURL].longURL = req.body.longURL;
   urlDatabase[shortURL].userID = req.session["user_id"];
+  
   res.redirect("/urls");
 });
 
@@ -119,7 +139,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 //AUTHENTICATION
 
-//get the login infor and check to see if it exists
+
 app.get("/login", (req, res) => {
   const templateVars = {
     user: null,
@@ -127,11 +147,11 @@ app.get("/login", (req, res) => {
   res.render("login_page", templateVars);
 });
 
-// checks the user when logged in send to the home page
+
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
-  const user = authentication(email, password, users);
+  const user = authenticationOfUsers(email, password, users);
   if (user) {
     req.session["user_id"] = user.id;
     res.redirect("/urls");
@@ -160,7 +180,7 @@ app.post("/register", (req, res) => {
   if (user) {
     return res.status(400).send("Credientials Already in Use.");
   }
-  const newID = newUser(email, password, users);
+  const newID = createNewUsers(email, password, users);
   req.session["user_id"] = newID;
   res.redirect("/urls");
 });
