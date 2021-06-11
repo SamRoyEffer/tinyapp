@@ -47,7 +47,67 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-// adding a long url to make shor url
+
+//READ
+// redirects to urls page
+app.get("/", (req, res) => {
+  const templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL],
+    user: users[req.session["user_id"]],
+  };
+  res.render("main-page", templateVars);
+});
+
+//redirects to main page with new long url
+app.post("/urls/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  urlDatabase[shortURL].longURL = req.body.longURL;
+  urlDatabase[shortURL].userID = req.session["user_id"];
+  
+  res.redirect("/urls");
+});
+
+//take to website url
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL
+  let longURL = urlDatabase[shortURL].longURL
+  if (!longURL.includes("http://")) {
+    longURL = "http://" + longURL
+  
+  }
+  res.redirect(longURL);
+})
+
+// show list of urls for logged in user
+app.get("/urls", (req, res) => {
+  const userID = req.session.user_id;
+  if (!userID) {
+    return res.status(400).send("Please sign in!");
+  }
+  const allURLS = urlsForUser(userID, urlDatabase);
+  const templateVars = {
+    urls: allURLS,
+    user: users[req.session["user_id"]],
+  };
+
+  res.render("url_index", templateVars);
+});
+
+// shows the new short url code for the longurl
+app.post("/urls", (req, res) => {
+  const userID = req.session.user_id;
+  if (!userID) {
+    return res.status(400).send("Please sign in!");
+  }
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: userID };
+  res.redirect("/urls");
+});
+
+//UPDATE
+
+// editing short url with different long url
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL
   const userCookie = req.session["user_id"]
@@ -64,67 +124,6 @@ app.get("/urls/:shortURL", (req, res) => {
   res.status(400).send("Please sign in!")
 });
 
-//READ
-// redirects to urls page
-app.get("/", (req, res) => {
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
-    user: users[req.session["user_id"]],
-  };
-  res.render("main-page", templateVars);
-});
-
-//take to website url
-app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL
-  let longURL = urlDatabase[shortURL].longURL
-  if (!longURL.includes("http://")) {
-    longURL = "http://" + longURL
-  
-  }
-  res.redirect(longURL);
-})
-
-// show list of urls
-app.get("/urls", (req, res) => {
-  const userID = req.session.user_id;
-  if (!userID) {
-    return res.status(400).send("Please sign in!");
-  }
-  const allURLS = urlsForUser(userID, urlDatabase);
-
-  const templateVars = {
-    urls: allURLS,
-    user: users[req.session["user_id"]],
-  };
-
-  res.render("url_index", templateVars); // list of saved urls
-});
-
-// shows the new short url code for the longurl
-app.post("/urls", (req, res) => {
-  const userID = req.session.user_id;
-  if (!userID) {
-    return res.status(400).send("Please sign in!");
-  }
-  const shortURL = generateRandomString();
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: userID };
-  res.redirect("/urls");
-});
-
-//UPDATE
-
-//edits the long url associated with the short url
-app.post("/urls/:shortURL", (req, res) => {
-
-  
-  const shortURL = req.params.shortURL;
-  urlDatabase[shortURL].longURL = req.body.longURL;
-  urlDatabase[shortURL].userID = req.session["user_id"];
-  
-  res.redirect("/urls");
-});
 
 //DELETE
 //removes a short and long url
