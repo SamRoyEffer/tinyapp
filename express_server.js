@@ -36,27 +36,23 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" },
 };
 
-
-
 //CREATE
 //creating a new url
 app.get("/urls/new", (req, res) => {
+  const userCookie = req.session["user_id"];
+  if (!userCookie) {
+    res.status(400).send("Please sign in!");
+  }
   const templateVars = {
     user: users[req.session["user_id"]],
   };
   res.render("urls_new", templateVars);
 });
 
-
 //READ
 // redirects to urls page
 app.get("/", (req, res) => {
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
-    user: users[req.session["user_id"]],
-  };
-  res.render("main-page", templateVars);
+  res.redirect("/urls")
 });
 
 //redirects to main page with new long url
@@ -70,20 +66,27 @@ app.post("/urls/:shortURL", (req, res) => {
 
 //take to website url
 app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL
-  let longURL = urlDatabase[shortURL].longURL
+  try {
+  const shortURL = req.params.shortURL;
+  let longURL = urlDatabase[shortURL].longURL;
   if (!longURL.includes("http://")) {
-    longURL = "http://" + longURL
-  
+    longURL = "http://" + longURL;
   }
   res.redirect(longURL);
-})
+  } catch (error) {
+    return res.status(404).send("Error 404! No website found.")
+  }
+});
 
 // show list of urls for logged in user
 app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
   if (!userID) {
-    return res.status(400).send("Please sign in!");
+    const allURLS = urlsForUser(userID, urlDatabase);
+    const templateVars = {
+      urls: allURLS,
+      user: users[req.session["user_id"]],
+    };
   }
   const allURLS = urlsForUser(userID, urlDatabase);
   const templateVars = {
@@ -109,10 +112,13 @@ app.post("/urls", (req, res) => {
 
 // editing short url with different long url
 app.get("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL
-  const userCookie = req.session["user_id"]
-  const shortLink = urlDatabase[shortURL]
-  const userCode = shortLink.userID
+  const shortURL = req.params.shortURL;
+  const userCookie = req.session["user_id"];
+  const shortLink = urlDatabase[shortURL];
+  if (!shortLink) {
+    return res.status(404).send("Error 404! No website found.")
+  }
+  const userCode = shortLink.userID;
   if (userCookie === userCode) {
     const templateVars = {
       shortURL: req.params.shortURL,
@@ -121,9 +127,8 @@ app.get("/urls/:shortURL", (req, res) => {
     };
     return res.render("url_show", templateVars);
   }
-  res.status(400).send("Please sign in!")
+  res.status(400).send("Please sign in!");
 });
-
 
 //DELETE
 //removes a short and long url
@@ -138,14 +143,18 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 //AUTHENTICATION
 
-
 app.get("/login", (req, res) => {
-  const templateVars = {
-    user: null,
-  };
-  res.render("login_page", templateVars);
+  const userCookie = req.session["user_id"];
+  if (userCookie) {
+    res.redirect("/urls");
+  } else {
+    const templateVars = {
+      user: null,
+    };
+    res.render("login_page", templateVars);
+  }
+  
 });
-
 
 app.post("/login", (req, res) => {
   const email = req.body.email;
@@ -161,13 +170,18 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   req.session["user_id"] = null;
-  res.redirect("/");
+  res.redirect("/urls");
 });
 
 // getting registration screen
 app.get("/register", (req, res) => {
+  const userCookie = req.session["user_id"];
+  if (userCookie) {
+    res.redirect("/urls");
+  } else {
   const templateVars = { user: users[req.session["user_id"]] };
   res.render("register", templateVars);
+  }
 });
 
 app.post("/register", (req, res) => {
