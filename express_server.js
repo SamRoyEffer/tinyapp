@@ -52,29 +52,33 @@ app.get("/urls/new", (req, res) => {
 //READ
 // redirects to urls page
 app.get("/", (req, res) => {
-  res.redirect("/urls")
+  res.redirect("/urls");
 });
 
 //redirects to main page with new long url
 app.post("/urls/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  urlDatabase[shortURL].longURL = req.body.longURL;
-  urlDatabase[shortURL].userID = req.session["user_id"];
-  
-  res.redirect("/urls");
+  const userCookie = req.session["user_id"];
+  if (userCookie) {
+    const shortURL = req.params.shortURL;
+    urlDatabase[shortURL].longURL = req.body.longURL;
+    urlDatabase[shortURL].userID = req.session["user_id"];
+
+    res.redirect("/urls");
+  }
+  res.status(400).send("Please sign in.");
 });
 
 //take to website url
 app.get("/u/:shortURL", (req, res) => {
   try {
-  const shortURL = req.params.shortURL;
-  let longURL = urlDatabase[shortURL].longURL;
-  if (!longURL.includes("http://")) {
-    longURL = "http://" + longURL;
-  }
-  res.redirect(longURL);
+    const shortURL = req.params.shortURL;
+    let longURL = urlDatabase[shortURL].longURL;
+    if (!longURL.includes("http://")) {
+      longURL = "http://" + longURL;
+    }
+    res.redirect(longURL);
   } catch (error) {
-    return res.status(404).send("Error 404! No website found.")
+    return res.status(404).send("Error 404! No website found.");
   }
 });
 
@@ -115,17 +119,19 @@ app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const userCookie = req.session["user_id"];
   const shortLink = urlDatabase[shortURL];
-  if (!shortLink) {
-    return res.status(404).send("Error 404! No website found.")
-  }
-  const userCode = shortLink.userID;
-  if (userCookie === userCode) {
-    const templateVars = {
-      shortURL: req.params.shortURL,
-      longURL: urlDatabase[req.params.shortURL].longURL,
-      user: users[req.session["user_id"]],
-    };
-    return res.render("url_show", templateVars);
+  if (userCookie) {
+    if (!shortLink) {
+      return res.status(404).send("Error 404! No website found.");
+    }
+    const userCode = shortLink.userID;
+    if (userCookie === userCode) {
+      const templateVars = {
+        shortURL: req.params.shortURL,
+        longURL: urlDatabase[req.params.shortURL].longURL,
+        user: users[req.session["user_id"]],
+      };
+      return res.render("url_show", templateVars);
+    }
   }
   res.status(400).send("Please sign in!");
 });
@@ -153,7 +159,6 @@ app.get("/login", (req, res) => {
     };
     res.render("login_page", templateVars);
   }
-  
 });
 
 app.post("/login", (req, res) => {
@@ -179,8 +184,8 @@ app.get("/register", (req, res) => {
   if (userCookie) {
     res.redirect("/urls");
   } else {
-  const templateVars = { user: users[req.session["user_id"]] };
-  res.render("register", templateVars);
+    const templateVars = { user: users[req.session["user_id"]] };
+    res.render("register", templateVars);
   }
 });
 
@@ -189,7 +194,9 @@ app.post("/register", (req, res) => {
   const password = req.body.password;
 
   const user = getUserByEmail(email, users);
-
+  if (!password || !email) {
+    return res.status(400).send("Please add Credentials.");
+  }
   if (user) {
     return res.status(400).send("Credientials Already in Use.");
   }
