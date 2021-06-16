@@ -57,8 +57,9 @@ app.get("/", (req, res) => {
 
 //redirects to main page with new long url
 app.post("/urls/:shortURL", (req, res) => {
-  const userCookie = req.session["user_id"];
-  if (userCookie) {
+  const { shortURL } = req.params;
+  const idCompare = urlDatabase[shortURL].userID;
+  if (req.session["user_id"] === idCompare) {
     const shortURL = req.params.shortURL;
     urlDatabase[shortURL].longURL = req.body.longURL;
     urlDatabase[shortURL].userID = req.session["user_id"];
